@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint Logged: {{ complaint.complaint_id }} | Civisense{% endblock %}
+
+{% block content %}
+<div class="result-hero">
+    <div class="container text-center">
+        <div class="success-badge-circle">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <h1 class="result-hero-title">Complaint Submitted Successfully</h1>
+        <p class="result-hero-sub">Your report has been analyzed by Civisense, indexed into the municipal database, and routed to the corresponding department.</p>
+    </div>
+</div>
+
+<div class="container py-8">
+    <div class="result-container">
+        
+        <!-- Complaint ID Primary Banner -->
+        <div class="complaint-id-banner">
+            <div class="id-banner-left">
+                <span class="id-label"><i class="fa-solid fa-fingerprint"></i> Official Complaint Reference ID</span>
+                <div class="id-value-group">
+                    <span class="id-value" id="complaint-id-display">{{ complaint.complaint_id }}</span>
+                    <button class="btn-copy-id" id="btn-copy-id" title="Copy Complaint ID" onclick="copyComplaintId('{{ complaint.complaint_id }}')">
+                        <i class="fa-regular fa-copy"></i>
+                        <span id="copy-text">Copy ID</span>
+                    </button>
+                </div>
+                <p class="id-hint">Save this ID or bookmark this page to check remediation status and technician dispatch notes.</p>
+            </div>
+            
+            <div class="id-banner-right">
+                <div class="status-pill status-reported">
+                    <span class="status-pulse-dot"></span>
+                    <span>Status: {{ complaint.status.upper() }}</span>
+                </div>
+                <span class="timestamp-pill"><i class="fa-regular fa-clock"></i> {{ complaint.created_at }}</span>
+            </div>
+        </div>
+
+        <!-- Main Grid: AI Analysis Card + Evidence Photo Card -->
+        <div class="result-grid">
+            
+            <!-- Left Card: AI Deep Analysis Breakdown -->
+            <div class="result-card ai-diagnostic-card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <div class="card-icon-tag"><i class="fa-solid fa-brain"></i></div>
+                        <div>
+                            <h2 class="card-title">AI Vision Diagnostic Report</h2>
+                            <span class="card-subtitle">Automated Multi-Modal Heuristic Engine Result</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-ai">Automated Analysis</span>
+                </div>
+
+                <div class="diagnostic-grid">
+                    <!-- Issue Type -->
+                    <div class="diag-item">
+                        <span class="diag-label">Classified Issue</span>
+                        <div class="diag-value diag-issue">
+                            <i class="fa-solid {% if complaint.issue_type == 'Pothole' %}fa-road{% elif complaint.issue_type == 'Garbage Dump' %}fa-trash-can{% elif complaint.issue_type == 'Water Leakage' %}fa-faucet-drip{% elif complaint.issue_type == 'Broken Streetlight' %}fa-lightbulb{% elif complaint.issue_type == 'Overflowing Drain' %}fa-water{% else %}fa-triangle-exclamation{% endif %}"></i>
+                            <strong>{{ complaint.issue_type }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- AI Confidence -->
+                    <div class="diag-item">
+                        <span class="diag-label">AI Confidence Score</span>
+                        <div class="diag-value">
+                            <div class="confidence-bar-group">
+                                <div class="conf-percent"><strong>{{ complaint.confidence }}%</strong></div>
+                                <div class="conf-meter-track">
+                                    <div class="conf-meter-fill" style="width: {{ complaint.confidence }}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Severity -->
+                    <div class="diag-item">
+                        <span class="diag-label">Estimated Severity</span>
+                        <div class="diag-value">
+                            <span class="severity-badge badge-{{ complaint.severity.lower() }}">
+                                <i class="fa-solid fa-circle-exclamation"></i> {{ complaint.severity }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="diag-item">
+                        <span class="diag-label">Department Priority</span>
+                        <div class="diag-value">
+                            <div class="priority-meter-box">
+                                <span class="priority-number">{{ complaint.priority }}/10</span>
+                                <div class="priority-dots">
+                                    {% for i in range(1, 11) %}
+                                        <span class="p-dot {% if i <= complaint.priority %}p-dot-active p-dot-{{ complaint.severity.lower() }}{% endif %}"></span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Department -->
+                    <div class="diag-item diag-fullwidth">
+                        <span class="diag-label">Assigned Municipal Department</span>
+                        <div class="diag-value dept-box">
+                            <div class="dept-avatar">
+                                <i class="fa-solid fa-building-flag"></i>
+                            </div>
+                            <div>
+                                <strong class="dept-name">{{ complaint.department }}</strong>
+                                <span class="dept-role">Automated dispatch trigger created in municipal queue</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Details -->
+                    <div class="diag-item diag-fullwidth">
+                        <span class="diag-label">Defect Coordinates & Ward</span>
+                        <div class="diag-value location-box">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <div>
+                                <strong>{{ complaint.location }}</strong>
+                                <span class="coords-sub">GPS Lat: {{ complaint.latitude }}, Long: {{ complaint.longitude }} (Nagpur)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Citizen Metadata Footer -->
+                <div class="diag-footer">
+                    <div class="reporter-info">
+                        <span><strong>Reported By:</strong> {{ complaint.name }}</span>
+                        <span><strong>Contact:</strong> {{ complaint.contact }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Card: Photo Evidence & Verification -->
+            <div class="result-card evidence-card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <div class="card-icon-tag"><i class="fa-solid fa-image"></i></div>
+                        <div>
+                            <h3 class="card-title">Uploaded Photographic Evidence</h3>
+                            <span class="card-subtitle">Inspected and archived for field technicians</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="evidence-image-wrapper">
+                    <img src="{{ url_for('static', filename='uploads/' + complaint.image_path) }}" alt="{{ complaint.issue_type }} Evidence" class="evidence-img" onerror="this.src='{{ url_for('static', filename='uploads/pothole_ward12.jpg') }}'">
+                    
+                    <div class="ai-scan-overlay">
+                        <div class="scan-target-box">
+                            <span class="scan-tag"><i class="fa-solid fa-crosshairs"></i> AI Detection Area</span>
+                            <span class="scan-confidence">{{ complaint.issue_type }} • {{ complaint.confidence }}%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="image-watermark">
+                        <span><i class="fa-solid fa-shield-check"></i> CIVISENSE VERIFIED EVIDENCE</span>
+                        <span>{{ complaint.complaint_id }}</span>
+                    </div>
+                </div>
+
+                <div class="evidence-notes">
+                    <h4 class="evidence-notes-title"><i class="fa-solid fa-quote-left"></i> Citizen Incident Notes</h4>
+                    <p class="evidence-notes-body">{{ complaint.description }}</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Next Action Buttons -->
+        <div class="result-actions-card">
+            <div class="actions-content">
+                <div>
+                    <h3 class="actions-title">What happens next?</h3>
+                    <p class="actions-sub">Our automated system has notified the {{ complaint.department }}. Track live progress or view the administrative command center.</p>
+                </div>
+                <div class="actions-buttons">
+                    <a href="{{ url_for('track') }}?id={{ complaint.complaint_id }}" class="btn btn-primary btn-lg" id="btn-track-this">
+                        <i class="fa-solid fa-magnifying-glass-location"></i> Track This Complaint
+                    </a>
+                    <a href="{{ url_for('report') }}" class="btn btn-secondary btn-lg" id="btn-report-another">
+                        <i class="fa-solid fa-camera"></i> Report Another Issue
+                    </a>
+                    <a href="{{ url_for('admin') }}" class="btn btn-outline btn-lg" id="btn-admin-check">
+                        <i class="fa-solid fa-gauge-high"></i> Admin Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

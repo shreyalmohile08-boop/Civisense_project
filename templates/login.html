@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | Civisense{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="header-breadcrumbs">
+            <a href="{{ url_for('index') }}">Home</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span>Account Login</span>
+        </div>
+        <h1 class="page-title">Access Civisense Gateway</h1>
+        <p class="page-subtitle">Select your portal to track personal civic grievances or manage citywide municipal remediation operations.</p>
+    </div>
+</div>
+
+<div class="container py-8">
+    <div class="login-page-grid">
+        
+        <!-- Left Column: Civic Tech Platform Overview -->
+        <div class="login-info-card">
+            <div class="info-badge">
+                <i class="fa-solid fa-shield-halved"></i> Municipal Secure Access
+            </div>
+            <h2 class="info-heading">Unified Portal for Citizens & Municipal Teams</h2>
+            <p class="info-desc">Civisense streamlines collaboration between Nagpur citizens and municipal departments through automated classification and verified ticket dispatch.</p>
+
+            <div class="role-comparison-list">
+                <div class="role-comp-box">
+                    <div class="role-comp-icon citizen-icon">
+                        <i class="fa-solid fa-user-group"></i>
+                    </div>
+                    <div>
+                        <h4 class="role-comp-title">Citizen Portal</h4>
+                        <p class="role-comp-text">Report local infrastructure hazards, view photographic evidence logs, and follow 5-stage SLA timelines for your neighborhood.</p>
+                    </div>
+                </div>
+
+                <div class="role-comp-box">
+                    <div class="role-comp-icon admin-icon">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                    <div>
+                        <h4 class="role-comp-title">Municipal Authority (Admin)</h4>
+                        <p class="role-comp-text">Access real-time geospatial maps, AI ward density insights, and update field crew status from Reported to Resolved.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hackathon-credentials-banner">
+                <h4><i class="fa-solid fa-key"></i> Pre-configured Demo Accounts:</h4>
+                <div class="cred-table">
+                    <div class="cred-row">
+                        <span class="cred-role">Admin:</span>
+                        <code>admin</code> / <code>admin123</code>
+                    </div>
+                    <div class="cred-row">
+                        <span class="cred-role">Citizen:</span>
+                        <code>citizen</code> / <code>citizen123</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Interactive Login / Register Form -->
+        <div class="login-form-card">
+            
+            <!-- Portal Tabs -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn {% if role_hint != 'admin' %}active-tab{% endif %}" id="tab-btn-citizen" onclick="switchAuthTab('citizen')">
+                    <i class="fa-solid fa-user"></i> Citizen Portal
+                </button>
+                <button type="button" class="auth-tab-btn {% if role_hint == 'admin' %}active-tab{% endif %}" id="tab-btn-admin" onclick="switchAuthTab('admin')">
+                    <i class="fa-solid fa-user-shield"></i> Municipal Authority
+                </button>
+            </div>
+
+            <!-- Citizen Login Section -->
+            <div class="auth-tab-content {% if role_hint == 'admin' %}hidden{% endif %}" id="auth-tab-citizen">
+                <div class="auth-tab-header">
+                    <h3 class="auth-title">Citizen Sign In</h3>
+                    <p class="auth-subtitle">Track your grievances and receive automated resolution alerts.</p>
+                </div>
+
+                <!-- 1-Click Demo Citizen Login -->
+                <div class="demo-quick-login-box">
+                    <form action="{{ url_for('login') }}" method="POST">
+                        <input type="hidden" name="identifier" value="citizen">
+                        <input type="hidden" name="password" value="citizen123">
+                        <input type="hidden" name="role" value="citizen">
+                        <input type="hidden" name="next" value="{{ next_url }}">
+                        <button type="submit" class="btn btn-secondary btn-quick-demo w-100">
+                            <i class="fa-solid fa-bolt text-amber"></i>
+                            <span>1-Click Demo Login as <strong>Rajesh Sharma (Citizen)</strong></span>
+                        </button>
+                    </form>
+                    <div class="divider-text"><span>OR ENTER CREDENTIALS</span></div>
+                </div>
+
+                <form action="{{ url_for('login') }}" method="POST" class="auth-form" id="form-citizen-login">
+                    <input type="hidden" name="role" value="citizen">
+                    <input type="hidden" name="next" value="{{ next_url }}">
+
+                    <div class="form-group">
+                        <label for="citizen-identifier" class="form-label">Username or Email</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-envelope input-icon"></i>
+                            <input type="text" name="identifier" id="citizen-identifier" class="form-control" placeholder="citizen or citizen@nagpur.in" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="citizen-password" class="form-label">Password</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" name="password" id="citizen-password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="btn-citizen-submit">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In to Citizen Portal
+                    </button>
+                </form>
+
+                <!-- Citizen Registration Toggle -->
+                <div class="auth-toggle-box">
+                    <span>New citizen reporter?</span>
+                    <button type="button" class="btn-link-toggle" onclick="toggleRegisterForm()">Create Citizen Account</button>
+                </div>
+
+                <!-- Hidden Registration Form -->
+                <div class="register-container hidden" id="register-container">
+                    <div class="register-header">
+                        <h4><i class="fa-solid fa-user-plus"></i> New Citizen Registration</h4>
+                        <button type="button" class="btn-close-register" onclick="toggleRegisterForm()">&times;</button>
+                    </div>
+                    <form action="{{ url_for('register') }}" method="POST" class="register-form">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="E.g., Priya Deshmukh" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" placeholder="E.g., priya_d" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="priya@domain.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number</label>
+                            <input type="text" name="phone" class="form-control" placeholder="+91 98XXX XXXXX" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Create Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-check"></i> Complete Citizen Sign Up
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Municipal Authority (Admin) Login Section -->
+            <div class="auth-tab-content {% if role_hint != 'admin' %}hidden{% endif %}" id="auth-tab-admin">
+                <div class="auth-tab-header">
+                    <div class="admin-shield-icon">
+                        <i class="fa-solid fa-building-shield"></i>
+                    </div>
+                    <h3 class="auth-title">Municipal Administration Portal</h3>
+                    <p class="auth-subtitle">Authorized access for municipal commissioners, ward supervisors, and department heads.</p>
+                </div>
+
+                <!-- 1-Click Demo Admin Login -->
+                <div class="demo-quick-login-box">
+                    <form action="{{ url_for('login') }}" method="POST">
+                        <input type="hidden" name="identifier" value="admin">
+                        <input type="hidden" name="password" value="admin123">
+                        <input type="hidden" name="role" value="admin">
+                        <input type="hidden" name="next" value="{{ next_url or url_for('admin') }}">
+                        <button type="submit" class="btn btn-primary btn-quick-demo w-100">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>1-Click Demo Login as <strong>Municipal Admin (Command Center)</strong></span>
+                        </button>
+                    </form>
+                    <div class="divider-text"><span>OR ENTER OFFICIAL CREDENTIALS</span></div>
+                </div>
+
+                <form action="{{ url_for('login') }}" method="POST" class="auth-form" id="form-admin-login">
+                    <input type="hidden" name="role" value="admin">
+                    <input type="hidden" name="next" value="{{ next_url or url_for('admin') }}">
+
+                    <div class="form-group">
+                        <label for="admin-identifier" class="form-label">Officer Username / Govt Email</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-id-badge input-icon"></i>
+                            <input type="text" name="identifier" id="admin-identifier" class="form-control" placeholder="admin or admin@civisense.gov" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin-password" class="form-label">Administrative Password</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-key input-icon"></i>
+                            <input type="password" name="password" id="admin-password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <div class="security-badge-row">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Protected by Nagpur Municipal Role-Based Access Control (RBAC)</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="btn-admin-submit">
+                        <i class="fa-solid fa-shield-check"></i> Sign In to Command Center
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function switchAuthTab(role) {
+        const citizenTab = document.getElementById("auth-tab-citizen");
+        const adminTab = document.getElementById("auth-tab-admin");
+        const btnCitizen = document.getElementById("tab-btn-citizen");
+        const btnAdmin = document.getElementById("tab-btn-admin");
+
+        if (role === "admin") {
+            citizenTab.classList.add("hidden");
+            adminTab.classList.remove("hidden");
+            btnCitizen.classList.remove("active-tab");
+            btnAdmin.classList.add("active-tab");
+        } else {
+            adminTab.classList.add("hidden");
+            citizenTab.classList.remove("hidden");
+            btnAdmin.classList.remove("active-tab");
+            btnCitizen.classList.add("active-tab");
+        }
+    }
+
+    function toggleRegisterForm() {
+        const regContainer = document.getElementById("register-container");
+        const formLogin = document.getElementById("form-citizen-login");
+        if (regContainer) {
+            regContainer.classList.toggle("hidden");
+            if (!regContainer.classList.contains("hidden")) {
+                regContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }
+</script>
+{% endblock %}

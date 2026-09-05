@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Report Civic Issue | Civisense{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="header-breadcrumbs">
+            <a href="{{ url_for('index') }}">Home</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span>Report Issue</span>
+        </div>
+        <h1 class="page-title">Report a Civic Problem</h1>
+        <p class="page-subtitle">Upload photographic evidence and details. Civisense will analyze the problem, determine priority, and route it immediately to the municipal department.</p>
+    </div>
+</div>
+
+<div class="container py-8">
+    <div class="report-grid">
+        <!-- Main Form Column -->
+        <div class="report-form-card">
+            <form action="{{ url_for('report') }}" method="POST" enctype="multipart/form-data" id="report-issue-form">
+                
+                <!-- Section 1: Photographic Evidence -->
+                <div class="form-section">
+                    <div class="section-label">
+                        <span class="label-step">1</span>
+                        <div>
+                            <h3 class="label-title">Upload Photo Evidence <span class="required-star">*</span></h3>
+                            <p class="label-desc">Snap or upload a clear photo of the civic defect. Our AI will inspect pixel features.</p>
+                        </div>
+                    </div>
+
+                    <!-- Drag & Drop Upload Zone -->
+                    <div class="dropzone" id="image-dropzone">
+                        <input type="file" name="image" id="image-input" accept="image/*" class="dropzone-input">
+                        <div class="dropzone-prompt" id="dropzone-prompt">
+                            <div class="dropzone-icon">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h4 class="dropzone-heading">Drag & drop photo here, or <span>Browse</span></h4>
+                            <p class="dropzone-hint">Supports JPG, PNG, WEBP up to 16 MB. Smartphone camera photos welcome.</p>
+                            <button type="button" class="btn btn-outline btn-sm dropzone-browse-btn" onclick="document.getElementById('image-input').click();">
+                                <i class="fa-solid fa-folder-open"></i> Select File
+                            </button>
+                        </div>
+
+                        <!-- Live Preview Display -->
+                        <div class="dropzone-preview hidden" id="dropzone-preview">
+                            <div class="preview-img-container">
+                                <img src="" alt="Selected Preview" id="preview-img" class="preview-img">
+                                <div class="preview-overlay-badge">
+                                    <i class="fa-solid fa-eye"></i> Ready for AI Analysis
+                                </div>
+                            </div>
+                            <div class="preview-meta">
+                                <div class="preview-details">
+                                    <span class="preview-filename" id="preview-filename">evidence.jpg</span>
+                                    <span class="preview-filesize" id="preview-filesize">-- KB</span>
+                                </div>
+                                <button type="button" class="btn-remove-preview" id="btn-remove-preview" title="Remove image">
+                                    <i class="fa-solid fa-trash-can"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden input for preset photo selection -->
+                    <input type="hidden" name="selected_sample" id="selected-sample-input" value="">
+
+
+                    <!-- Real Photo Evidence Presets -->
+                    <div class="real-photos-section">
+                        <span class="real-photos-title"><i class="fa-solid fa-camera"></i> Or select a real civic problem photo to test:</span>
+                        <div class="real-photos-grid">
+                            <div class="real-photo-card" data-filename="pothole_ward12.jpg" data-name="Real Pothole (Ward 12)" data-desc="Deep dangerous pothole on main road causing two-wheelers to slip near junction." data-loc="Ward 12, Ring Road" data-lat="21.1120" data-lon="79.0515">
+                                <img src="{{ url_for('static', filename='uploads/pothole_ward12.jpg') }}" alt="Real Pothole" class="real-photo-thumb">
+                                <span class="real-photo-tag">Pothole</span>
+                            </div>
+                            <div class="real-photo-card" data-filename="garbage_ward7.jpg" data-name="Real Garbage Dump (Ward 7)" data-desc="Overflowing municipal waste container with plastic trash scattered across footpath." data-loc="Ward 7, Near Community Center" data-lat="21.1305" data-lon="79.0965">
+                                <img src="{{ url_for('static', filename='uploads/garbage_ward7.jpg') }}" alt="Real Garbage" class="real-photo-thumb">
+                                <span class="real-photo-tag">Garbage</span>
+                            </div>
+                            <div class="real-photo-card" data-filename="streetlight_ward4.jpg" data-name="Real Broken Streetlight (Ward 4)" data-desc="Extinguished broken streetlight with damaged casing causing pitch-dark street at night." data-loc="Ward 4, West End Avenue" data-lat="21.1520" data-lon="79.0620">
+                                <img src="{{ url_for('static', filename='uploads/streetlight_ward4.jpg') }}" alt="Real Streetlight" class="real-photo-thumb">
+                                <span class="real-photo-tag">Streetlight</span>
+                            </div>
+                            <div class="real-photo-card" data-filename="water_leak_civillines.jpg" data-name="Real Water Pipeline Burst (Civil Lines)" data-desc="Underground clean water supply line burst gushing water across the road." data-loc="Civil Lines, Near High Court Gate" data-lat="21.1590" data-lon="79.0735">
+                                <img src="{{ url_for('static', filename='uploads/water_leak_civillines.jpg') }}" alt="Real Water Leak" class="real-photo-thumb">
+                                <span class="real-photo-tag">Water Leak</span>
+                            </div>
+                            <div class="real-photo-card" data-filename="road_damage_sadar.jpg" data-name="Real Road Damage (Sadar)" data-desc="Severe asphalt cave-in and longitudinal structural cracks across road surface." data-loc="Sadar, Residency Road" data-lat="21.1630" data-lon="79.0830">
+                                <img src="{{ url_for('static', filename='uploads/road_damage_sadar.jpg') }}" alt="Real Road Damage" class="real-photo-thumb">
+                                <span class="real-photo-tag">Road Damage</span>
+                            </div>
+                            <div class="real-photo-card" data-filename="drain_manishnagar.jpg" data-name="Real Choked Drain (Manish Nagar)" data-desc="Choked stormwater open drain overflowing with dirty sewage water onto road." data-loc="Manish Nagar, Besa Road" data-lat="21.0960" data-lon="79.0810">
+                                <img src="{{ url_for('static', filename='uploads/drain_manishnagar.jpg') }}" alt="Real Drain" class="real-photo-thumb">
+                                <span class="real-photo-tag">Drain Overflow</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Problem Description -->
+                <div class="form-section">
+
+                    <div class="section-label">
+                        <span class="label-step">2</span>
+                        <div>
+                            <h3 class="label-title">Issue Description <span class="required-star">*</span></h3>
+                            <p class="label-desc">Explain the severity, depth, smell, safety risks, or pedestrian obstructions.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <textarea name="description" id="issue-description" rows="4" class="form-control" placeholder="E.g., Deep pothole causing two-wheelers to slip near the junction. Urgent repair needed." required></textarea>
+                    </div>
+
+                    <!-- Quick Semantic Prompt Tags -->
+                    <div class="quick-tags-box">
+                        <span class="tags-label"><i class="fa-solid fa-lightbulb"></i> Quick templates:</span>
+                        <div class="tags-list">
+                            <button type="button" class="quick-tag-btn" data-text="Deep dangerous pothole on main road causing accidents and severe vehicle damage.">Pothole Hazard</button>
+                            <button type="button" class="quick-tag-btn" data-text="Overflowing garbage dump with foul smell, attracting stray dogs and blocking the footpath.">Garbage Dump</button>
+                            <button type="button" class="quick-tag-btn" data-text="Drinking water supply pipeline burst gushing thousands of liters of clean water onto road.">Water Pipeline Burst</button>
+                            <button type="button" class="quick-tag-btn" data-text="Streetlight non-functional for multiple days, creating dark unsafe zone for pedestrians at night.">Broken Streetlight</button>
+                            <button type="button" class="quick-tag-btn" data-text="Stormwater drain completely choked with silt, black sewage overflowing into residential lane.">Drain Overflow</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Geolocation -->
+                <div class="form-section">
+                    <div class="section-label">
+                        <span class="label-step">3</span>
+                        <div>
+                            <h3 class="label-title">Defect Location <span class="required-star">*</span></h3>
+                            <p class="label-desc">Pinpoint where the problem is located. GPS coordinates ensure field teams locate it fast.</p>
+                        </div>
+                    </div>
+
+                    <div class="location-input-group">
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-location-dot input-icon"></i>
+                            <input type="text" name="location" id="location-input" class="form-control" placeholder="E.g., Ward 12, Ring Road near Trimurti Square, Nagpur" required>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-geolocate" id="btn-geolocate">
+                            <i class="fa-solid fa-crosshairs"></i> Use Current Location
+                        </button>
+                    </div>
+
+                    <!-- Hidden Lat/Lon fields for map persistence -->
+                    <input type="hidden" name="latitude" id="lat-input" value="21.1458">
+                    <input type="hidden" name="longitude" id="lon-input" value="79.0882">
+
+                    <!-- Quick Preset Hotspots for Nagpur demo presentation -->
+                    <div class="quick-locations">
+                        <span class="loc-preset-label"><i class="fa-solid fa-map-pin"></i> Nagpur Demo Presets:</span>
+                        <div class="loc-chips">
+                            <button type="button" class="loc-chip" data-name="Ward 12, Ring Road" data-lat="21.1120" data-lon="79.0515">Ward 12 (Ring Rd)</button>
+                            <button type="button" class="loc-chip" data-name="Ward 7, Near Community Center" data-lat="21.1305" data-lon="79.0965">Ward 7 (Ajni)</button>
+                            <button type="button" class="loc-chip" data-name="Ward 4, West End Avenue" data-lat="21.1520" data-lon="79.0620">Ward 4 (Ram Nagar)</button>
+                            <button type="button" class="loc-chip" data-name="Civil Lines, Near High Court Gate" data-lat="21.1590" data-lon="79.0735">Civil Lines</button>
+                            <button type="button" class="loc-chip" data-name="Sadar, Residency Road" data-lat="21.1630" data-lon="79.0830">Sadar</button>
+                            <button type="button" class="loc-chip" data-name="Manish Nagar, Besa Road" data-lat="21.0960" data-lon="79.0810">Manish Nagar</button>
+                        </div>
+                    </div>
+
+                    <!-- Mini Leaflet Map Picker -->
+                    <div class="map-picker-wrapper">
+                        <div id="report-mini-map" class="report-mini-map"></div>
+                        <div class="map-picker-hint">
+                            <i class="fa-solid fa-info-circle"></i> Drag pin or click on map to fine-tune defect location. Coordinates: <span id="coords-display">21.1458, 79.0882</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Citizen Information -->
+                <div class="form-section">
+                    <div class="section-label">
+                        <span class="label-step">4</span>
+                        <div>
+                            <h3 class="label-title">Citizen Details <span class="optional-pill">(Optional)</span></h3>
+                            <p class="label-desc">Provide contact info if you wish to receive SMS/Email remediation updates.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="citizen-name" class="form-label">Full Name</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                <input type="text" name="name" id="citizen-name" class="form-control" placeholder="E.g., Rajesh Sharma (or leave blank)">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="citizen-contact" class="form-label">Phone or Email</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-phone input-icon"></i>
+                                <input type="text" name="contact" id="citizen-contact" class="form-control" placeholder="+91 98XXX XXXXX or user@domain.com">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button with Loading State -->
+                <div class="form-submit-row">
+                    <button type="submit" class="btn btn-primary btn-xl btn-submit-report" id="btn-submit-report">
+                        <span class="submit-normal-state">
+                            <i class="fa-solid fa-brain"></i> Submit & Run AI Analysis
+                        </span>
+                        <span class="submit-loading-state hidden">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing Image & Generating Ticket...
+                        </span>
+                    </button>
+                    <p class="submit-security-note">
+                        <i class="fa-solid fa-lock"></i> Direct municipal routing. Complaint will be encrypted and indexed immediately into SQLite database.
+                    </p>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Right Side AI Guidance Card -->
+        <aside class="report-sidebar">
+            <div class="sidebar-card ai-info-card">
+                <div class="ai-card-badge">
+                    <i class="fa-solid fa-sparkles"></i> AI Verification Protocol
+                </div>
+                <h3 class="sidebar-title">How Our AI Analyzes Your Report</h3>
+                <p class="sidebar-desc">When you press submit, the Civisense inference engine performs 4 instant operations:</p>
+                
+                <ul class="ai-feature-list">
+                    <li>
+                        <div class="ai-feat-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <div>
+                            <strong>Vision Classification</strong>
+                            <p>Evaluates visual features (texture, contrast, dark fluid, asphalt edges) to identify category.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="ai-feat-icon"><i class="fa-solid fa-gauge"></i></div>
+                        <div>
+                            <strong>Severity & Priority Scoring</strong>
+                            <p>Determines urgency rating (Low, Medium, High, Critical) and maps a 1-10 SLA priority score.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="ai-feat-icon"><i class="fa-solid fa-route"></i></div>
+                        <div>
+                            <strong>Department Routing</strong>
+                            <p>Maps issue to Road Maintenance, Solid Waste, Water Board, Electrical Dept, or PWD.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="ai-feat-icon"><i class="fa-solid fa-receipt"></i></div>
+                        <div>
+                            <strong>Unique CIV-ID Generation</strong>
+                            <p>Generates an instant tracking reference code so you can follow resolution progress 24/7.</p>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="demo-tip-box">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <strong>Hackathon Tip:</strong> Use the Nagpur demo presets or click anywhere on the interactive map to pin coordinates effortlessly!
+                </div>
+            </div>
+
+            <!-- Municipal Hotline Card -->
+            <div class="sidebar-card hotline-card">
+                <h4 class="hotline-title"><i class="fa-solid fa-phone-volume"></i> Emergency Toll-Free</h4>
+                <p class="hotline-desc">For catastrophic gas leaks or electrical wire collapse emergencies:</p>
+                <div class="hotline-number">1800-233-3764</div>
+                <span class="hotline-sub">Nagpur Municipal Disaster Cell</span>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize mini Leaflet map for report page
+    document.addEventListener("DOMContentLoaded", function() {
+        initReportMiniMap();
+    });
+</script>
+{% endblock %}

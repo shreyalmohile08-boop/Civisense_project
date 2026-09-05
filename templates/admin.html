@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Operations Command Center | Civisense{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js is included in base.html -->
+{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div class="container admin-topbar-content">
+        <div class="admin-topbar-left">
+            <div class="admin-badge"><i class="fa-solid fa-shield-halved"></i> Municipal Administration</div>
+            <h1 class="admin-page-title">City Operations & Grievance Command Center</h1>
+            <p class="admin-page-subtitle">Real-time incident ingestion, AI routing validation, and field workforce dispatch across Nagpur Municipal Corporation.</p>
+        </div>
+        <div class="admin-topbar-right">
+            <div class="admin-clock" id="admin-clock">
+                <i class="fa-regular fa-clock"></i> <span id="current-time">Live Monitoring</span>
+            </div>
+            <a href="{{ url_for('report') }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus"></i> Simulate New Ingestion
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container py-8">
+    
+    <!-- 4 Dashboard KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-header">
+                <span class="kpi-title">Total Complaints</span>
+                <div class="kpi-icon"><i class="fa-solid fa-layer-group"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-value" id="kpi-total-val">{{ total_count }}</div>
+                <div class="kpi-trend positive">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                    <span>Aggregated from all wards</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-resolved">
+            <div class="kpi-header">
+                <span class="kpi-title">Resolved</span>
+                <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-value text-emerald" id="kpi-resolved-val">{{ resolved_count }}</div>
+                <div class="kpi-trend text-emerald">
+                    <i class="fa-solid fa-shield-heart"></i>
+                    <span>Remediation verified</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-pending">
+            <div class="kpi-header">
+                <span class="kpi-title">Pending</span>
+                <div class="kpi-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-value text-amber" id="kpi-pending-val">{{ pending_count }}</div>
+                <div class="kpi-trend text-amber">
+                    <i class="fa-solid fa-person-digging"></i>
+                    <span>In municipal queue</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-priority">
+            <div class="kpi-header">
+                <span class="kpi-title">High Priority</span>
+                <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-value text-rose" id="kpi-priority-val">{{ high_priority_count }}</div>
+                <div class="kpi-trend text-rose">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>SLA &lt; 24h immediate dispatch</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Dynamic Insights Section -->
+    <div class="insights-section-card">
+        <div class="card-header border-bottom">
+            <div class="card-title-group">
+                <div class="card-icon-tag"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div>
+                    <h2 class="card-title">AI Predictive Insights & Recommendations</h2>
+                    <span class="card-subtitle">Real-time heuristics synthesized from incident patterns and ward density</span>
+                </div>
+            </div>
+            <span class="ai-active-pill"><i class="fa-solid fa-circle-nodes"></i> Model: Hybrid v1.2</span>
+        </div>
+
+        <div class="insights-grid">
+            {% for item in insights %}
+            <div class="insight-card insight-{{ item.color }}">
+                <div class="insight-badge-row">
+                    <span class="insight-badge badge-{{ item.color }}">{{ item.badge }}</span>
+                    <i class="fa-solid {{ item.icon }} insight-badge-icon"></i>
+                </div>
+                <p class="insight-text">{{ item.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Interactive Civic Issue Map Section -->
+    <div class="admin-map-card">
+        <div class="card-header border-bottom">
+            <div class="card-title-group">
+                <div class="card-icon-tag"><i class="fa-solid fa-map"></i></div>
+                <div>
+                    <h2 class="card-title">Civic Issue Geospatial Heatmap & Tracking Pins</h2>
+                    <span class="card-subtitle">Interactive map of citizen complaints across Nagpur municipal wards</span>
+                </div>
+            </div>
+            <!-- Map Legend -->
+            <div class="map-legend">
+                <span class="legend-item"><span class="legend-dot dot-high"></span> High Priority</span>
+                <span class="legend-item"><span class="legend-dot dot-medium"></span> Medium Priority</span>
+                <span class="legend-item"><span class="legend-dot dot-low"></span> Low Priority</span>
+            </div>
+        </div>
+
+        <div class="admin-map-wrapper">
+            <div id="admin-interactive-map" class="admin-map-container"></div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts Grid -->
+    <div class="charts-grid">
+        
+        <!-- Chart 1: By Category -->
+        <div class="chart-card">
+            <div class="card-header border-bottom">
+                <div class="card-title-group">
+                    <div class="card-icon-tag"><i class="fa-solid fa-chart-pie"></i></div>
+                    <div>
+                        <h3 class="card-title">Complaints by Category</h3>
+                        <span class="card-subtitle">Distribution of reported defect types</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 2: By Status -->
+        <div class="chart-card">
+            <div class="card-header border-bottom">
+                <div class="card-title-group">
+                    <div class="card-icon-tag"><i class="fa-solid fa-chart-column"></i></div>
+                    <div>
+                        <h3 class="card-title">Complaints by Status</h3>
+                        <span class="card-subtitle">Current resolution lifecycle stages</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 3: Priority Distribution -->
+        <div class="chart-card">
+            <div class="card-header border-bottom">
+                <div class="card-title-group">
+                    <div class="card-icon-tag"><i class="fa-solid fa-chart-line"></i></div>
+                    <div>
+                        <h3 class="card-title">Priority Distribution</h3>
+                        <span class="card-subtitle">Urgency rating breakdown (Low / Med / High)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="priorityChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Live Complaints Management Table -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="table-title-group">
+                <h2 class="table-card-title"><i class="fa-solid fa-table-list"></i> Grievance Ingestion & Status Registry</h2>
+                <span class="table-count-badge" id="visible-count-badge">{{ complaints|length }} Complaints Loaded</span>
+            </div>
+            
+            <!-- Table Search & Filters -->
+            <div class="table-controls">
+                <div class="table-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="admin-table-search" placeholder="Search ID, location, issue..." class="table-search-input">
+                </div>
+
+                <div class="table-filter-group">
+                    <select id="filter-status" class="table-filter-select">
+                        <option value="ALL">All Statuses</option>
+                        <option value="Reported">Reported</option>
+                        <option value="Verified">Verified</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+
+                    <select id="filter-priority" class="table-filter-select">
+                        <option value="ALL">All Priorities</option>
+                        <option value="CRITICAL">Critical</option>
+                        <option value="HIGH">High</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="LOW">Low</option>
+                    </select>
+
+                    <select id="filter-category" class="table-filter-select">
+                        <option value="ALL">All Categories</option>
+                        <option value="Pothole">Pothole</option>
+                        <option value="Garbage Dump">Garbage Dump</option>
+                        <option value="Water Leakage">Water Leakage</option>
+                        <option value="Broken Streetlight">Broken Streetlight</option>
+                        <option value="Road Damage">Road Damage</option>
+                        <option value="Overflowing Drain">Overflowing Drain</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Responsive Complaints Table -->
+        <div class="table-responsive">
+            <table class="admin-table" id="complaints-table">
+                <thead>
+                    <tr>
+                        <th>Complaint ID</th>
+                        <th>Issue</th>
+                        <th>Photo</th>
+                        <th>Location</th>
+                        <th>Department</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr class="complaint-row"
+                        data-id="{{ c.complaint_id }}"
+                        data-issue="{{ c.issue_type }}"
+                        data-location="{{ c.location }}"
+                        data-status="{{ c.status }}"
+                        data-priority="{{ c.severity }}"
+                        data-search="{{ c.complaint_id }} {{ c.issue_type }} {{ c.location }} {{ c.department }} {{ c.name }}">
+                        
+                        <td class="cell-id">
+                            <a href="{{ url_for('track') }}?id={{ c.complaint_id }}" class="id-link" title="Open citizen tracker">
+                                <i class="fa-solid fa-hashtag"></i> {{ c.complaint_id }}
+                            </a>
+                            <span class="cell-timestamp">{{ c.created_at[:10] }}</span>
+                        </td>
+
+                        <td class="cell-issue">
+                            <span class="issue-pill issue-{{ c.issue_type.lower().replace(' ', '-') }}">
+                                <i class="fa-solid {% if c.issue_type == 'Pothole' %}fa-road{% elif c.issue_type == 'Garbage Dump' %}fa-trash-can{% elif c.issue_type == 'Water Leakage' %}fa-faucet-drip{% elif c.issue_type == 'Broken Streetlight' %}fa-lightbulb{% elif c.issue_type == 'Overflowing Drain' %}fa-water{% else %}fa-triangle-exclamation{% endif %}"></i>
+                                {{ c.issue_type }}
+                            </span>
+                            <span class="cell-conf">{{ c.confidence }}% AI Conf</span>
+                        </td>
+
+                        <td class="cell-photo">
+                            <div class="table-thumb-wrapper" onclick="openPhotoModal('{{ url_for('static', filename='uploads/' + c.image_path) }}', '{{ c.complaint_id }}', '{{ c.issue_type }}')">
+                                <img src="{{ url_for('static', filename='uploads/' + c.image_path) }}" alt="{{ c.issue_type }}" class="table-thumb" onerror="this.src='{{ url_for('static', filename='uploads/pothole_ward12.jpg') }}'">
+                                <span class="thumb-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+                            </div>
+                        </td>
+
+                        <td class="cell-location">
+                            <strong>{{ c.location }}</strong>
+                            <span class="cell-coords">{{ c.latitude }}, {{ c.longitude }}</span>
+                        </td>
+
+                        <td class="cell-department">
+                            <span class="dept-text"><i class="fa-solid fa-building"></i> {{ c.department }}</span>
+                        </td>
+
+                        <td class="cell-priority">
+                            <span class="severity-pill badge-{{ c.severity.lower() }}">{{ c.severity }}</span>
+                            <span class="pri-score-sub">{{ c.priority }}/10</span>
+                        </td>
+
+                        <td class="cell-status">
+                            <!-- Instant Status Changer Select -->
+                            <div class="status-select-wrapper">
+                                <select class="status-select status-select-{{ c.status.lower().replace(' ', '-') }}"
+                                        id="status-select-{{ c.complaint_id }}"
+                                        onchange="updateComplaintStatus('{{ c.complaint_id }}', this.value, this)">
+                                    <option value="Reported" {% if c.status == 'Reported' %}selected{% endif %}>Reported</option>
+                                    <option value="Verified" {% if c.status == 'Verified' %}selected{% endif %}>Verified</option>
+                                    <option value="Assigned" {% if c.status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                                    <option value="In Progress" {% if c.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="Resolved" {% if c.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                </select>
+                            </div>
+                        </td>
+
+                        <td class="cell-actions">
+                            <a href="{{ url_for('track') }}?id={{ c.complaint_id }}" class="btn-action-icon" title="View Citizen Tracking Page">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                            </a>
+                            <a href="{{ url_for('result', complaint_id=c.complaint_id) }}" class="btn-action-icon" title="View AI Diagnosis Report">
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer-bar">
+            <span class="table-sync-info"><i class="fa-solid fa-database"></i> Connected to local SQLite DB: <code>database.db</code></span>
+            <span class="table-hotkey-hint">Status updates auto-save and propagate instantly to citizen tracking view.</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- Photo Preview Modal -->
+<div class="modal-backdrop hidden" id="photo-modal" onclick="closePhotoModal()">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title-box">
+                <span class="modal-id" id="modal-id">CIV-XXXXX</span>
+                <span class="modal-issue" id="modal-issue">Issue Preview</span>
+            </div>
+            <button class="modal-close" onclick="closePhotoModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <img src="" alt="Enlarged Evidence" id="modal-img" class="modal-preview-img">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        initAdminDashboard();
+    });
+</script>
+{% endblock %}

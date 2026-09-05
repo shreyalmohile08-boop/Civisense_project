@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}My Reported Grievances | Civisense{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="header-breadcrumbs">
+            <a href="{{ url_for('index') }}">Home</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span>Citizen Dashboard</span>
+        </div>
+        <div class="citizen-profile-header">
+            <div>
+                <h1 class="page-title">Citizen Grievance Portfolio</h1>
+                <p class="page-subtitle">Welcome, <strong>{{ session.user_name }}</strong>. Here are the civic defects reported under your citizen account.</p>
+            </div>
+            <a href="{{ url_for('report') }}" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Report New Defect
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container py-8">
+    
+    <!-- Citizen Quick KPI Counters -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-header">
+                <span class="kpi-title">Your Total Reports</span>
+                <div class="kpi-icon"><i class="fa-solid fa-folder"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-value">{{ complaints|length }}</div>
+                <div class="kpi-trend positive"><i class="fa-solid fa-check"></i> Indexed in municipal records</div>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-resolved">
+            <div class="kpi-header">
+                <span class="kpi-title">Remediated & Closed</span>
+                <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div class="kpi-body">
+                {% set resolved_cnt = namespace(val=0) %}
+                {% for c in complaints %}
+                    {% if c.status == 'Resolved' %}
+                        {% set resolved_cnt.val = resolved_cnt.val + 1 %}
+                    {% endif %}
+                {% endfor %}
+                <div class="kpi-value text-emerald">{{ resolved_cnt.val }}</div>
+                <div class="kpi-trend text-emerald"><i class="fa-solid fa-shield-check"></i> Field work completed</div>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-pending">
+            <div class="kpi-header">
+                <span class="kpi-title">Active / In Progress</span>
+                <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-value text-amber">{{ complaints|length - resolved_cnt.val }}</div>
+                <div class="kpi-trend text-amber"><i class="fa-solid fa-person-digging"></i> In field remediation</div>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-priority">
+            <div class="kpi-header">
+                <span class="kpi-title">Citizen Account</span>
+                <div class="kpi-icon"><i class="fa-solid fa-id-card"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-value" style="font-size: 18px; font-weight: 700; margin-top: 8px;">{{ session.username }}</div>
+                <div class="kpi-trend"><i class="fa-solid fa-phone"></i> {{ session.phone or 'Verified Citizen' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grievances List Section -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="table-title-group">
+                <h2 class="table-card-title"><i class="fa-solid fa-list-check"></i> Your Incident Tickets</h2>
+                <span class="table-count-badge">{{ complaints|length }} Complaints Found</span>
+            </div>
+            <a href="{{ url_for('report') }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-camera"></i> File Another Report
+            </a>
+        </div>
+
+        {% if complaints %}
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Issue</th>
+                        <th>Photo</th>
+                        <th>Location</th>
+                        <th>Department</th>
+                        <th>Priority</th>
+                        <th>Current Status</th>
+                        <th>Track</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr class="complaint-row">
+                        <td class="cell-id">
+                            <a href="{{ url_for('track') }}?id={{ c.complaint_id }}" class="id-link">
+                                <i class="fa-solid fa-hashtag"></i> {{ c.complaint_id }}
+                            </a>
+                            <span class="cell-timestamp">{{ c.created_at }}</span>
+                        </td>
+                        <td class="cell-issue">
+                            <span class="issue-pill issue-{{ c.issue_type.lower().replace(' ', '-') }}">
+                                {{ c.issue_type }}
+                            </span>
+                        </td>
+                        <td class="cell-photo">
+                            <div class="table-thumb-wrapper">
+                                <img src="{{ url_for('static', filename='uploads/' + c.image_path) }}" alt="{{ c.issue_type }}" class="table-thumb" onerror="this.src='{{ url_for('static', filename='uploads/pothole_ward12.jpg') }}'">
+                            </div>
+                        </td>
+                        <td class="cell-location">
+                            <strong>{{ c.location }}</strong>
+                        </td>
+                        <td class="cell-department">
+                            <span class="dept-text">{{ c.department }}</span>
+                        </td>
+                        <td class="cell-priority">
+                            <span class="severity-pill badge-{{ c.severity.lower() }}">{{ c.severity }}</span>
+                        </td>
+                        <td class="cell-status">
+                            <span class="status-badge-lg status-{{ c.status.lower().replace(' ', '-') }}" style="font-size: 11.5px; padding: 4px 10px;">
+                                {{ c.status }}
+                            </span>
+                        </td>
+                        <td class="cell-actions">
+                            <a href="{{ url_for('track') }}?id={{ c.complaint_id }}" class="btn btn-outline btn-xs">
+                                <i class="fa-solid fa-timeline"></i> View Timeline
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="track-empty-state" style="padding: 50px 20px;">
+            <div class="empty-state-icon"><i class="fa-solid fa-inbox"></i></div>
+            <h3 class="empty-title">No Grievances Filed Yet</h3>
+            <p class="empty-desc">You haven't submitted any civic complaints under this citizen account yet.</p>
+            <a href="{{ url_for('report') }}" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-camera"></i> Report an Issue in Nagpur
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

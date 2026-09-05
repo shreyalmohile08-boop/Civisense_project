@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Track Complaint Status | Civisense{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="header-breadcrumbs">
+            <a href="{{ url_for('index') }}">Home</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span>Track Complaint</span>
+        </div>
+        <h1 class="page-title">Citizen Grievance Tracker</h1>
+        <p class="page-subtitle">Track the real-time remediation status, municipal department assignment, and field progress of your civic complaint.</p>
+    </div>
+</div>
+
+<div class="container py-8">
+    <!-- Search Bar Card -->
+    <div class="track-search-card">
+        <form action="{{ url_for('track') }}" method="GET" class="track-form" id="track-lookup-form">
+            <div class="track-input-group">
+                <div class="track-input-wrapper">
+                    <i class="fa-solid fa-hashtag track-search-icon"></i>
+                    <input type="text" name="id" id="track-id-input" value="{{ complaint_id or '' }}" placeholder="Enter Complaint ID (e.g., CIV-10482)" class="form-control track-input" required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary btn-track-submit" id="btn-track-search">
+                    <i class="fa-solid fa-magnifying-glass"></i> Track Progress
+                </button>
+            </div>
+        </form>
+
+        <!-- Quick Demo IDs Bar -->
+        <div class="track-quick-demo">
+            <span class="quick-demo-title"><i class="fa-solid fa-bolt"></i> Sample Complaint IDs:</span>
+            <div class="quick-demo-chips">
+                <a href="{{ url_for('track') }}?id=CIV-10482" class="demo-chip {% if complaint_id == 'CIV-10482' %}active-chip{% endif %}">CIV-10482 (Reported)</a>
+                <a href="{{ url_for('track') }}?id=CIV-10488" class="demo-chip {% if complaint_id == 'CIV-10488' %}active-chip{% endif %}">CIV-10488 (Verified)</a>
+                <a href="{{ url_for('track') }}?id=CIV-10483" class="demo-chip {% if complaint_id == 'CIV-10483' %}active-chip{% endif %}">CIV-10483 (Assigned)</a>
+                <a href="{{ url_for('track') }}?id=CIV-10484" class="demo-chip {% if complaint_id == 'CIV-10484' %}active-chip{% endif %}">CIV-10484 (In Progress)</a>
+                <a href="{{ url_for('track') }}?id=CIV-10485" class="demo-chip {% if complaint_id == 'CIV-10485' %}active-chip{% endif %}">CIV-10485 (Resolved)</a>
+            </div>
+        </div>
+    </div>
+
+    {% if not_found %}
+    <!-- Not Found Card -->
+    <div class="not-found-card">
+        <div class="not-found-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="not-found-title">Complaint ID Not Found</h3>
+        <p class="not-found-desc">We couldn't locate a complaint registered with ID <strong>"{{ complaint_id }}"</strong> in the municipal SQLite database. Please check the reference number or test one of the demo IDs above.</p>
+        <div class="not-found-actions">
+            <a href="{{ url_for('report') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Submit New Report</a>
+            <a href="{{ url_for('admin') }}" class="btn btn-outline"><i class="fa-solid fa-table"></i> Check All in Admin</a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if complaint %}
+    <!-- Complaint Active Tracker View -->
+    <div class="tracking-results-view">
+        
+        <!-- Status Header Card -->
+        <div class="track-header-card">
+            <div class="track-header-main">
+                <div class="track-id-badge">
+                    <span class="badge-label">COMPLAINT ID</span>
+                    <strong class="badge-val">{{ complaint.complaint_id }}</strong>
+                </div>
+                <div class="track-header-titles">
+                    <div class="track-issue-row">
+                        <h2 class="track-issue-heading">{{ complaint.issue_type }}</h2>
+                        <span class="severity-pill badge-{{ complaint.severity.lower() }}">{{ complaint.severity }} SEVERITY</span>
+                        <span class="priority-pill">Priority: {{ complaint.priority }}/10</span>
+                    </div>
+                    <p class="track-location-sub">
+                        <i class="fa-solid fa-location-dot"></i> {{ complaint.location }} &bull; Reported on {{ complaint.created_at }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="track-header-status">
+                <span class="current-status-label">Current Stage</span>
+                <div class="status-badge-lg status-{{ complaint.status.lower().replace(' ', '-') }}" id="track-header-status-badge">
+                    <span class="pulse-circle"></span>
+                    <span id="track-header-status-text">{{ complaint.status }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5-Stage Visual Workflow Timeline -->
+        <div class="timeline-container-card" id="timeline-card" data-complaint-id="{{ complaint.complaint_id }}" data-current-status="{{ complaint.status }}" data-current-idx="{{ current_idx }}">
+            <div class="card-header border-bottom">
+                <div class="card-title-group">
+                    <div class="card-icon-tag"><i class="fa-solid fa-timeline"></i></div>
+                    <div>
+                        <h3 class="card-title">Remediation Progress Timeline</h3>
+                        <span class="card-subtitle">Five-Stage Municipal SLA Workflow</span>
+                    </div>
+                </div>
+                <span class="live-update-badge" id="live-sync-badge"><i class="fa-solid fa-rotate fa-spin"></i> Live Status Sync Active</span>
+            </div>
+
+            <div class="visual-timeline" id="visual-timeline-track">
+                
+                <!-- Stage 1: Reported (index 0) -->
+                <div class="timeline-step {% if current_idx >= 0 %}step-completed{% endif %} {% if current_idx == 0 %}step-active{% endif %}" id="timeline-step-0" data-step-idx="0">
+                    <div class="step-marker" id="step-marker-0">
+                        {% if current_idx > 0 %}
+                            <i class="fa-solid fa-check"></i>
+                        {% elif current_idx == 0 %}
+                            <span class="step-dot-active"></span>
+                        {% else %}
+                            <span>1</span>
+                        {% endif %}
+                    </div>
+                    <div class="step-content">
+                        <h4 class="step-title">Reported</h4>
+                        <p class="step-desc">Citizen lodged defect with photographic evidence & location.</p>
+                        <span class="step-timestamp">{{ complaint.created_at }}</span>
+                    </div>
+                </div>
+                
+                <div class="timeline-connector {% if current_idx >= 1 %}connector-completed{% endif %}" id="timeline-connector-0"></div>
+
+                <!-- Stage 2: Verified (index 1) -->
+                <div class="timeline-step {% if current_idx >= 1 %}step-completed{% endif %} {% if current_idx == 1 %}step-active{% endif %}" id="timeline-step-1" data-step-idx="1">
+                    <div class="step-marker" id="step-marker-1">
+                        {% if current_idx > 1 %}
+                            <i class="fa-solid fa-check"></i>
+                        {% elif current_idx == 1 %}
+                            <span class="step-dot-active"></span>
+                        {% else %}
+                            <span>2</span>
+                        {% endif %}
+                    </div>
+                    <div class="step-content">
+                        <h4 class="step-title">Verified</h4>
+                        <p class="step-desc">AI vision core classified problem at {{ complaint.confidence }}% confidence.</p>
+                        <span class="step-timestamp">Autonomous Verification</span>
+                    </div>
+                </div>
+
+                <div class="timeline-connector {% if current_idx >= 2 %}connector-completed{% endif %}" id="timeline-connector-1"></div>
+
+                <!-- Stage 3: Assigned (index 2) -->
+                <div class="timeline-step {% if current_idx >= 2 %}step-completed{% endif %} {% if current_idx == 2 %}step-active{% endif %}" id="timeline-step-2" data-step-idx="2">
+                    <div class="step-marker" id="step-marker-2">
+                        {% if current_idx > 2 %}
+                            <i class="fa-solid fa-check"></i>
+                        {% elif current_idx == 2 %}
+                            <span class="step-dot-active"></span>
+                        {% else %}
+                            <span>3</span>
+                        {% endif %}
+                    </div>
+                    <div class="step-content">
+                        <h4 class="step-title">Assigned</h4>
+                        <p class="step-desc">Routed to {{ complaint.department }}.</p>
+                        <span class="step-timestamp">Work Order Generated</span>
+                    </div>
+                </div>
+
+                <div class="timeline-connector {% if current_idx >= 3 %}connector-completed{% endif %}" id="timeline-connector-2"></div>
+
+                <!-- Stage 4: In Progress (index 3) -->
+                <div class="timeline-step {% if current_idx >= 3 %}step-completed{% endif %} {% if current_idx == 3 %}step-active{% endif %}" id="timeline-step-3" data-step-idx="3">
+                    <div class="step-marker" id="step-marker-3">
+                        {% if current_idx > 3 %}
+                            <i class="fa-solid fa-check"></i>
+                        {% elif current_idx == 3 %}
+                            <span class="step-dot-active"></span>
+                        {% else %}
+                            <span>4</span>
+                        {% endif %}
+                    </div>
+                    <div class="step-content">
+                        <h4 class="step-title">In Progress</h4>
+                        <p class="step-desc">Field repair crew dispatched with equipment to ground location.</p>
+                        <span class="step-timestamp">Active Ground Team</span>
+                    </div>
+                </div>
+
+                <div class="timeline-connector {% if current_idx >= 4 %}connector-completed{% endif %}" id="timeline-connector-3"></div>
+
+                <!-- Stage 5: Resolved (index 4) -->
+                <div class="timeline-step {% if current_idx >= 4 %}step-completed{% endif %} {% if current_idx == 4 %}step-active{% endif %}" id="timeline-step-4" data-step-idx="4">
+                    <div class="step-marker" id="step-marker-4">
+                        {% if current_idx == 4 %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% else %}
+                            <span>5</span>
+                        {% endif %}
+                    </div>
+                    <div class="step-content">
+                        <h4 class="step-title">Resolved</h4>
+                        <p class="step-desc">Remediation work completed, quality inspected, and ticket closed.</p>
+                        <span class="step-timestamp">Municipal Certification</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- Details Grid: Info + Map -->
+        <div class="track-details-grid">
+            
+            <!-- Left Info Card -->
+            <div class="track-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fa-solid fa-circle-info"></i> Complaint Specifications</h3>
+                </div>
+
+                <div class="track-spec-list">
+                    <div class="spec-item">
+                        <span class="spec-label">Responsible Department</span>
+                        <strong class="spec-val"><i class="fa-solid fa-building"></i> {{ complaint.department }}</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Municipal Priority Score</span>
+                        <strong class="spec-val text-priority">{{ complaint.priority }}/10 ({{ complaint.severity }})</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">AI Classification Confidence</span>
+                        <strong class="spec-val text-confidence">{{ complaint.confidence }}% Reliable</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Logged By</span>
+                        <strong class="spec-val">{{ complaint.name }} ({{ complaint.contact }})</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Exact Ward & Street</span>
+                        <strong class="spec-val">{{ complaint.location }}</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">GPS Coordinates</span>
+                        <strong class="spec-val font-mono">{{ complaint.latitude }}, {{ complaint.longitude }}</strong>
+                    </div>
+                </div>
+
+                <div class="track-description-box">
+                    <h4 class="desc-box-title">Citizen Incident Description</h4>
+                    <p class="desc-box-content">{{ complaint.description }}</p>
+                </div>
+            </div>
+
+            <!-- Right Location Map & Photo Card -->
+            <div class="track-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fa-solid fa-map-location-dot"></i> Ground Location & Photo</h3>
+                </div>
+
+                <!-- Leaflet Location Map for Tracked Complaint -->
+                <div class="track-map-wrapper">
+                    <div id="track-complaint-map" class="track-map-container"
+                         data-lat="{{ complaint.latitude }}"
+                         data-lng="{{ complaint.longitude }}"
+                         data-id="{{ complaint.complaint_id }}"
+                         data-issue="{{ complaint.issue_type }}"
+                         data-status="{{ complaint.status }}">
+                    </div>
+                </div>
+
+                <!-- Photographic Evidence Thumbnail -->
+                <div class="track-photo-box">
+                    <div class="photo-thumb-wrapper">
+                        <img src="{{ url_for('static', filename='uploads/' + complaint.image_path) }}" alt="{{ complaint.issue_type }} Photo" class="track-photo-thumb" onerror="this.src='{{ url_for('static', filename='uploads/pothole_ward12.jpg') }}'">
+                    </div>
+                    <div class="photo-info">
+                        <span class="photo-badge"><i class="fa-solid fa-camera"></i> Photographic Evidence</span>
+                        <p class="photo-sub">Captured at incident location. Stored securely for remediation auditing.</p>
+                        <a href="{{ url_for('static', filename='uploads/' + complaint.image_path) }}" target="_blank" class="btn btn-outline btn-xs">
+                            <i class="fa-solid fa-up-right-from-square"></i> Open Full Image
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    {% endif %}
+
+    {% if not complaint and not not_found %}
+    <!-- Initial Friendly State when visiting /track without query param -->
+    <div class="track-empty-state">
+        <div class="empty-state-icon">
+            <i class="fa-solid fa-magnifying-glass-location"></i>
+        </div>
+        <h2 class="empty-title">Track Any Civic Complaint</h2>
+        <p class="empty-desc">Enter your 8-character reference ID (e.g. <code>CIV-10482</code>) generated during report submission to see live field progress.</p>
+        
+        <div class="sample-demo-card">
+            <h4><i class="fa-solid fa-lightbulb"></i> Click to test sample complaints:</h4>
+            <div class="sample-grid">
+                <a href="{{ url_for('track') }}?id=CIV-10482" class="sample-box">
+                    <div class="sample-id">CIV-10482</div>
+                    <div class="sample-detail">Pothole &bull; Ward 12 &bull; <span class="text-reported">Reported</span></div>
+                </a>
+                <a href="{{ url_for('track') }}?id=CIV-10483" class="sample-box">
+                    <div class="sample-id">CIV-10483</div>
+                    <div class="sample-detail">Garbage Dump &bull; Ward 7 &bull; <span class="text-assigned">Assigned</span></div>
+                </a>
+                <a href="{{ url_for('track') }}?id=CIV-10484" class="sample-box">
+                    <div class="sample-id">CIV-10484</div>
+                    <div class="sample-detail">Broken Streetlight &bull; Ward 4 &bull; <span class="text-progress">In Progress</span></div>
+                </a>
+                <a href="{{ url_for('track') }}?id=CIV-10485" class="sample-box">
+                    <div class="sample-id">CIV-10485</div>
+                    <div class="sample-detail">Water Leakage &bull; Civil Lines &bull; <span class="text-resolved">Resolved</span></div>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        initTrackMap();
+        initTrackLiveSync();
+    });
+</script>
+
+{% endblock %}

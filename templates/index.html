@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}Civisense – Report. Track. Improve. | Smart Civic Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container hero-container">
+        <div class="hero-badge">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Next-Gen Civic Intelligence</span>
+            <span class="hero-badge-city">Nagpur Pilot</span>
+        </div>
+        
+        <h1 class="hero-title">
+            Smarter Cities Start With <span class="gradient-text">Better Reporting.</span>
+        </h1>
+        
+        <p class="hero-tagline">
+            Report. Track. Improve.
+        </p>
+        
+        <p class="hero-description">
+            AI-powered civic issue reporting and tracking that helps citizens report problems and enables authorities to resolve them faster.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="hero-actions">
+            <a href="{{ url_for('report') }}" class="btn btn-primary btn-lg" id="hero-btn-report">
+                <i class="fa-solid fa-camera"></i> Report an Issue
+            </a>
+            <a href="{{ url_for('track') }}" class="btn btn-secondary btn-lg" id="hero-btn-track">
+                <i class="fa-solid fa-magnifying-glass-location"></i> Track Complaint
+            </a>
+            <a href="{{ url_for('admin') }}" class="btn btn-outline btn-lg" id="hero-btn-admin">
+                <i class="fa-solid fa-gauge-high"></i> Admin Dashboard
+            </a>
+        </div>
+
+        <!-- Quick Track Input -->
+        <div class="hero-quick-track">
+            <form action="{{ url_for('track') }}" method="GET" class="quick-track-form">
+                <div class="quick-track-group">
+                    <i class="fa-solid fa-hashtag quick-track-icon"></i>
+                    <input type="text" name="id" placeholder="Enter Complaint ID (e.g. CIV-10482)..." class="quick-track-input" required>
+                    <button type="submit" class="quick-track-btn">
+                        <span>Track Status</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="quick-hints">
+                <span>Try demo IDs:</span>
+                <a href="{{ url_for('track') }}?id=CIV-10482" class="demo-chip">CIV-10482 (Ward 12)</a>
+                <a href="{{ url_for('track') }}?id=CIV-10484" class="demo-chip">CIV-10484 (Ward 4)</a>
+                <a href="{{ url_for('track') }}?id=CIV-10485" class="demo-chip">CIV-10485 (Resolved)</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Live Statistics Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card stat-total">
+                <div class="stat-icon-wrapper">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="stat-total-issues">{{ total_issues }}</div>
+                    <div class="stat-label">Total Issues</div>
+                    <div class="stat-meta"><i class="fa-solid fa-check-double"></i> Live database count</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-resolved">
+                <div class="stat-icon-wrapper">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="stat-resolved-issues">{{ resolved_issues }}</div>
+                    <div class="stat-label">Resolved Issues</div>
+                    <div class="stat-meta"><i class="fa-solid fa-arrow-trend-up"></i> SLA achieved</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-pending">
+                <div class="stat-icon-wrapper">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="stat-pending-issues">{{ pending_issues }}</div>
+                    <div class="stat-label">Pending Issues</div>
+                    <div class="stat-meta"><i class="fa-solid fa-gear fa-spin-pulse"></i> In field workflow</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-priority">
+                <div class="stat-icon-wrapper">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="stat-high-priority-issues">{{ high_priority_issues }}</div>
+                    <div class="stat-label">High Priority Issues</div>
+                    <div class="stat-meta"><i class="fa-solid fa-bolt"></i> Urgent dispatch</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Civic Issue Cards Section -->
+<section class="section categories-section">
+    <div class="container">
+        <div class="section-header text-center">
+            <span class="section-sub">Empowering Active Citizenship</span>
+            <h2 class="section-title">What Civic Issues Can You Report?</h2>
+            <p class="section-desc">Our multi-modal AI classifier recognizes and prioritizes civic problems instantly from photos and descriptions.</p>
+        </div>
+
+        <div class="categories-grid">
+            <!-- Potholes -->
+            <div class="category-card" data-category="Pothole">
+                <div class="cat-icon-box cat-pothole">
+                    <i class="fa-solid fa-road"></i>
+                </div>
+                <div class="cat-content">
+                    <div class="cat-header">
+                        <h3 class="cat-title">Potholes</h3>
+                        <span class="badge badge-high">High Urgency</span>
+                    </div>
+                    <p class="cat-text">Road craters, dips, and asphalt hollows causing vehicle damage and two-wheeler skid hazards.</p>
+                    <div class="cat-dept">
+                        <i class="fa-solid fa-building-shield"></i>
+                        <span>Road Maintenance Dept</span>
+                    </div>
+                    <a href="{{ url_for('report') }}" class="cat-link">Report Pothole <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <!-- Garbage -->
+            <div class="category-card" data-category="Garbage Dump">
+                <div class="cat-icon-box cat-garbage">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <div class="cat-content">
+                    <div class="cat-header">
+                        <h3 class="cat-title">Garbage Dumps</h3>
+                        <span class="badge badge-medium">Health Risk</span>
+                    </div>
+                    <p class="cat-text">Illegal roadside waste dumping, overflowing community dustbins, and hazardous debris accumulation.</p>
+                    <div class="cat-dept">
+                        <i class="fa-solid fa-recycle"></i>
+                        <span>Solid Waste Management</span>
+                    </div>
+                    <a href="{{ url_for('report') }}" class="cat-link">Report Garbage <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <!-- Water Leakage -->
+            <div class="category-card" data-category="Water Leakage">
+                <div class="cat-icon-box cat-water">
+                    <i class="fa-solid fa-faucet-drip"></i>
+                </div>
+                <div class="cat-content">
+                    <div class="cat-header">
+                        <h3 class="cat-title">Water Leakage</h3>
+                        <span class="badge badge-high">High Urgency</span>
+                    </div>
+                    <p class="cat-text">Burst municipal pipelines, gushing clean drinking water lines, and broken valve chambers.</p>
+                    <div class="cat-dept">
+                        <i class="fa-solid fa-droplet"></i>
+                        <span>Water Supply & Sewerage Board</span>
+                    </div>
+                    <a href="{{ url_for('report') }}" class="cat-link">Report Water Leak <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <!-- Broken Streetlights -->
+            <div class="category-card" data-category="Broken Streetlight">
+                <div class="cat-icon-box cat-light">
+                    <i class="fa-solid fa-lightbulb"></i>
+                </div>
+                <div class="cat-content">
+                    <div class="cat-header">
+                        <h3 class="cat-title">Broken Streetlights</h3>
+                        <span class="badge badge-medium">Public Safety</span>
+                    </div>
+                    <p class="cat-text">Dark corridors, flickering fixtures, damaged poles, or exposed wiring putting pedestrians at risk.</p>
+                    <div class="cat-dept">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Electrical & Lighting Dept</span>
+                    </div>
+                    <a href="{{ url_for('report') }}" class="cat-link">Report Streetlight <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <!-- Road Damage -->
+            <div class="category-card" data-category="Road Damage">
+                <div class="cat-icon-box cat-road">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="cat-content">
+                    <div class="cat-header">
+                        <h3 class="cat-title">Road Damage</h3>
+                        <span class="badge badge-high">High Urgency</span>
+                    </div>
+                    <p class="cat-text">Structural asphalt caving, large longitudinal cracks, eroded pavements, and crumbling divider curbs.</p>
+                    <div class="cat-dept">
+                        <i class="fa-solid fa-trowel-bricks"></i>
+                        <span>Public Works Dept (PWD)</span>
+                    </div>
+                    <a href="{{ url_for('report') }}" class="cat-link">Report Damage <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <!-- Overflowing Drain -->
+            <div class="category-card" data-category="Overflowing Drain">
+                <div class="cat-icon-box cat-drain">
+                    <i class="fa-solid fa-water"></i>
+                </div>
+                <div class="cat-content">
+                    <div class="cat-header">
+                        <h3 class="cat-title">Overflowing Drains</h3>
+                        <span class="badge badge-critical">Critical Bio-Hazard</span>
+                    </div>
+                    <p class="cat-text">Choked storm gutters, open manholes, backflowing sewage water inundating roads and footpaths.</p>
+                    <div class="cat-dept">
+                        <i class="fa-solid fa-filter"></i>
+                        <span>Drainage & Sanitation Dept</span>
+                    </div>
+                    <a href="{{ url_for('report') }}" class="cat-link">Report Drain Overflow <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section how-it-works-section">
+    <div class="container">
+        <div class="section-header text-center">
+            <span class="section-sub">Autonomous Processing Workflow</span>
+            <h2 class="section-title">How Civisense Operates</h2>
+            <p class="section-desc">From incident capture to field crew deployment in under 3 minutes.</p>
+        </div>
+
+        <div class="workflow-grid">
+            <div class="workflow-card">
+                <div class="workflow-step-num">01</div>
+                <div class="workflow-icon">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h3 class="workflow-title">Citizen Capture</h3>
+                <p class="workflow-text">Citizens snap a photo, add a one-line description, and let browser GPS pin the exact ward coordinates automatically.</p>
+            </div>
+
+            <div class="workflow-card highlighted">
+                <div class="workflow-step-num">02</div>
+                <div class="workflow-icon">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h3 class="workflow-title">AI Vision & Routing</h3>
+                <p class="workflow-text">The multi-modal AI categorizes problem type, estimates severity (Low/Med/High), sets priority score, and routes ticket to the right department.</p>
+            </div>
+
+            <div class="workflow-card">
+                <div class="workflow-step-num">03</div>
+                <div class="workflow-icon">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <h3 class="workflow-title">Transparent Tracking</h3>
+                <p class="workflow-text">Citizens track live status through a 5-stage progress timeline while municipal admins update remediation milestones in real-time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Issues Showcase -->
+{% if recent_complaints %}
+<section class="section recent-issues-section">
+    <div class="container">
+        <div class="section-header flex-header">
+            <div>
+                <span class="section-sub">Live Civic Stream</span>
+                <h2 class="section-title">Recently Reported Grievances</h2>
+            </div>
+            <a href="{{ url_for('admin') }}" class="btn btn-outline">
+                <i class="fa-solid fa-table-list"></i> View All in Dashboard
+            </a>
+        </div>
+
+        <div class="recent-grid">
+            {% for item in recent_complaints %}
+            <div class="recent-card">
+                <div class="recent-img-wrapper">
+                    <img src="{{ url_for('static', filename='uploads/' + item.image_path) }}" alt="{{ item.issue_type }}" onerror="this.src='{{ url_for('static', filename='uploads/pothole_ward12.jpg') }}'">
+                    <span class="recent-status-pill status-{{ item.status.lower().replace(' ', '-') }}">{{ item.status }}</span>
+                    <span class="recent-priority-pill priority-{{ item.severity.lower() }}">{{ item.severity }}</span>
+                </div>
+                <div class="recent-body">
+                    <div class="recent-meta">
+                        <span class="recent-id"><i class="fa-solid fa-hashtag"></i> {{ item.complaint_id }}</span>
+                        <span class="recent-date"><i class="fa-regular fa-clock"></i> {{ item.created_at[:10] }}</span>
+                    </div>
+                    <h4 class="recent-issue-title">{{ item.issue_type }}</h4>
+                    <p class="recent-location"><i class="fa-solid fa-location-dot"></i> {{ item.location }}</p>
+                    <p class="recent-desc">{{ item.description[:95] }}...</p>
+                    <div class="recent-footer">
+                        <span class="recent-dept"><i class="fa-solid fa-building"></i> {{ item.department }}</span>
+                        <a href="{{ url_for('track') }}?id={{ item.complaint_id }}" class="recent-track-btn">
+                            Track <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Civic Action Banner -->
+<section class="cta-banner-section">
+    <div class="container">
+        <div class="cta-banner-box">
+            <div class="cta-banner-content">
+                <span class="cta-mini-tag">Active Citizen Engagement</span>
+                <h2 class="cta-heading">Spot a Problem in Your Neighborhood?</h2>
+                <p class="cta-sub">Take 30 seconds to file a complaint. Our AI will ensure the right ward team gets dispatched today.</p>
+            </div>
+            <div class="cta-banner-action">
+                <a href="{{ url_for('report') }}" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-bullhorn"></i> File Complaint Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
